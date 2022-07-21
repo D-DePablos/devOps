@@ -1,7 +1,9 @@
+# AWS settings - key / secret key from AWS config
 provider "aws" {
-	region = "eu-west-2"
+	region = var.ec2_default_region
 }
 
+# generate a security group that allows SSH (port 22)
 resource "aws_security_group" "main" {
 	description = "DDP Security Group"
   egress = [
@@ -32,7 +34,6 @@ resource "aws_security_group" "main" {
   ]
 }
 
-
 data "cloudinit_config" "user_data" {
   base64_encode = true
 	part {
@@ -42,14 +43,28 @@ data "cloudinit_config" "user_data" {
 
 }
 
+resource "tls_private_key" "pk" {
+  algorithm = "RSA"
+  rsa_bits = 4096
+}
+
+resource "aws_key_pair" "juno_kp_temp" {
+  key_name = var.aws_key_name
+  public_key = tls_private_key.pk.public_key_openssh
+
+  # Copy the private key to folder
+  provisioner "local-exec" {
+    command = "echo '${tls_private_key.pk.private_key_pem}' > ${var.aws_key_name}.pem && chmod 400 ./${var.aws_key_name}.pem"
+  }
+}
 resource aws_instance "ec2_example" {
-	ami = "ami-064db92110f58350d"
-	instance_type = "t2.small"
-	key_name = "aws_tf_test"
+	ami = var.ec2_ami
+	instance_type = var.ec2_instance_type
+	key_name = var.aws_key_name
 	user_data = data.cloudinit_config.user_data.rendered
 	vpc_security_group_ids = [aws_security_group.main.id]
 	tags ={
-		Name = "ddp_test"
+		Name = var.ec2_default_name
 	}
 }
 

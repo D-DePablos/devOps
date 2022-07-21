@@ -1,9 +1,14 @@
 #cloud-config
 shell: /bin/bash
 
-packages:
- - golang-go
+# package_update: true
 
-runcmd:
- - export GOPATH=$(go env GOPATH)
- - go install "github.com/NethermindEth/juno/cmd/juno@latest"
+# packages:
+#  - golang-go
+
+# runcmd:
+#  - export GOPATH=$HOME/go
+#  - export GOCACHE=$HOME/.cache/go-build
+#  - go install "github.com/NethermindEth/juno/cmd/juno@latest"
+#  - export PATH=$PATH:$GOPATH/bin
+#  - juno --version
